@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Le cause dei ritardi – Radar QN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,700&display=swap">
+<link rel="stylesheet" href="../assets/radar.css">
+<link rel="stylesheet" href="../assets/treni.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="../assets/radar.js"></script>
+<script src="../assets/treni.js"></script>
+</head>
+<body>
+<main class="radar">
+  <header>
+    <h1 class="r-title" id="g6ct">Alta velocità, un ritardo su tre dipende dalla rete</h1>
+    <p class="r-sub">Cause dei ritardi dei treni Alta velocità nel 2026, fino al 31 luglio, quota sul totale dei ritardi, %</p>
+  </header>
+  <figure class="r-chart" id="g6c"></figure>
+  <p class="r-note">Valori arrotondati («circa») dichiarati dal ministero. Per il resto dei ritardi la fonte non indica la causa.</p>
+  <footer class="r-foot">
+    <span>Fonte: Ministero delle infrastrutture e dei trasporti, risposta all'interrogazione 5-05808, Camera, IX Commissione, 7 ottobre 2026</span>
+    <span>Elaborazione Radar – QN</span>
+  </footer>
+</main>
+<script>
+(function(){
+const f1=T.f1,f0=T.f0,W=T.W,showTip=T.showTip,hideTip=T.hideTip,AN=T.AN,RM=T.RM;
+let CAU;
+const COL=['--red','--blue','--blue-3'];
+function g6(){
+  const el=document.getElementById('g6c');el.innerHTML='';const an=AN.g6&&!RM;AN.g6=false;
+  const rest=100-d3.sum(CAU,d=>d[1]), parts=[...CAU,['Causa non indicata',rest,'--grey-5','']];
+  const w=W(el), narrow=w<520, bh=narrow?34:44, h=narrow?bh+parts.length*40+10:bh+70, x=d3.scaleLinear([0,100],[0,w]);
+  const svg=d3.select(el).append('svg').attr('width',w).attr('height',h).attr('role','img').attr('aria-label','Cause dei ritardi Alta velocità 2026: rete 33%, treni 25%, fattori esterni 23%');
+  let acc=0;
+  parts.forEach((p,i)=>{const x0=x(acc);acc+=p[1];const r=svg.append('rect').attr('x',x0).attr('y',0).attr('height',bh).attr('width',an?0:x(p[1])-1).style('fill',`var(${p[2]})`);
+    if(an)r.transition().delay(i*250).duration(700).attr('width',x(p[1])-1);
+    if(!narrow){svg.append('text').attr('x',x0+8).attr('y',bh/2+6).style('font-size','17px').style('font-weight',700).style('fill',i<2?'#fff':'var(--ink)').text(p[1]+'%');
+      svg.append('text').attr('x',x0).attr('y',bh+20).style('font-size','13px').style('font-weight',700).style('fill',i===3?'var(--ink-2)':`var(${i===2?'--fg':p[2]})`).text(p[0]);
+      if(p[3])svg.append('text').attr('x',x0).attr('y',bh+36).style('font-size','11px').style('fill','var(--ink-2)').text(p[3])}
+    else{const yy=bh+22+i*40;svg.append('rect').attr('x',0).attr('y',yy-11).attr('width',12).attr('height',12).style('fill',`var(${p[2]})`);
+      svg.append('text').attr('x',20).attr('y',yy).style('font-size','14px').style('font-weight',700).style('fill','var(--ink)').text(`${p[0]} ${p[1]}%`);
+      if(p[3])svg.append('text').attr('x',20).attr('y',yy+15).style('font-size','11px').style('fill','var(--ink-2)').text(p[3])}
+  });
+  Radar.scheduleHeight();
+}
+
+Radar.loadCSV('../data/cause_ritardi_av.csv').then(rows=>{CAU=rows.map((r,i)=>[r['Causa'],+r['Quota'],COL[i],r['Dettaglio']||'']);T.run(document.getElementById('g6c'),'g6',g6)}).catch(e=>Radar.fail('.radar',e));
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dieci anni di ritardi – Radar QN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,700&display=swap">
+<link rel="stylesheet" href="../assets/radar.css">
+<link rel="stylesheet" href="../assets/treni.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="../assets/radar.js"></script>
+<script src="../assets/treni.js"></script>
+</head>
+<body>
+<main class="radar">
+  <header>
+    <h1 class="r-title" id="g5ct">Frecce e Intercity, il ritardo medio sale</h1>
+    <p class="r-sub">Ritardo medio dei treni Trenitalia in arrivo a destinazione, minuti, 2018-2025</p>
+  </header>
+  <figure class="r-chart" id="g5c"></figure>
+  <div class="r-key"><span><i class="sw sw--ring"></i>2020 e 2021, anni del Covid con meno treni in circolazione: poco confrontabili</span></div>
+  <p class="r-note">Scioperi ed eventi eccezionali esclusi. Italo non compreso.</p>
+  <footer class="r-foot">
+    <span>Fonte: Trenitalia, Relazioni sulla qualità dei servizi 2018-2025</span>
+    <span>Elaborazione Radar – QN</span>
+  </footer>
+</main>
+<script>
+(function(){
+const f1=T.f1,f0=T.f0,W=T.W,showTip=T.showTip,hideTip=T.hideTip,AN=T.AN,RM=T.RM;
+let yrs5,S5;
+function g5(){const anim=AN.g5;AN.g5=false;
+  const M=S5.M.v,R=S5.R.v, iy=yrs5.length-1;
+  document.getElementById('g5ct').textContent=`Frecce e Intercity, il ritardo medio sale da ${f1(M[0])} a ${f1(M[iy])} minuti. I regionali restano intorno ai ${f0(d3.mean(R))}`;
+  const el=document.getElementById('g5c');el.innerHTML='';
+  const w=W(el),narrow=w<520,h=280,m={t:28,r:narrow?84:150,b:26,l:30};
+  const x=d3.scaleLinear([2018,2025],[m.l,w-m.r]), y=d3.scaleLinear([0,12],[h-m.b,m.t]);
+  const svg=d3.select(el).append('svg').attr('width',w).attr('height',h).attr('role','img').attr('aria-label',document.getElementById('g5ct').textContent);
+  y.ticks(4).forEach(t=>{svg.append('line').attr('x1',m.l).attr('x2',w-m.r).attr('y1',y(t)).attr('y2',y(t)).style('stroke','var(--rule)');
+    svg.append('text').attr('x',m.l-6).attr('y',y(t)+4).attr('text-anchor','end').text(f0(t)).style('font-size','11px').style('fill','var(--ink-2)')});
+  const ln=d3.line().x(d=>x(d[0])).y(d=>y(d[1])).curve(d3.curveMonotoneX), g=svg.append('g');
+  [['M','var(--blue)','Frecce e Intercity'],['R','var(--red)','Regionali']].forEach(([k,col,lab],si)=>{
+    const pts=yrs5.map((yy,i)=>[yy,S5[k].v[i]]);
+    [[pts.slice(0,2),null],[pts.slice(1,5),'5 5'],[pts.slice(4),null]].forEach(([sp,da])=>g.append('path').attr('d',ln(sp)).style('fill','none').style('stroke',col).style('stroke-width',3).style('stroke-dasharray',da));
+    pts.forEach((q,i)=>svg.append('circle').attr('cx',x(q[0])).attr('cy',y(q[1])).attr('r',q[0]===2025||q[0]===2018?5:3.5).style('fill',(q[0]===2020||q[0]===2021)?'var(--bg)':col).style('stroke',col).style('stroke-width',1.8)
+      .style('opacity',anim&&!RM?0:1).on('pointermove',ev=>showTip(ev,`<b>${lab}, ${q[0]}</b>${f1(q[1])} minuti`)).on('pointerleave',hideTip).transition().delay(anim&&!RM?i*170:0).duration(250).style('opacity',1));
+    const q0=pts[0],qn=pts[iy];
+    svg.append('text').attr('x',x(q0[0])-2).attr('y',y(q0[1])-12).text(f1(q0[1])).style('font-size','14px').style('font-weight',700).style('fill',col);
+    const t=svg.append('text').attr('x',x(qn[0])+10).attr('y',y(qn[1])+5).style('font-size','14px').style('font-weight',700).style('fill',col).text(f1(qn[1])+' min');
+    t.append('tspan').attr('x',x(qn[0])+10).attr('dy',16).style('font-size','12px').style('font-weight',600).text(narrow?(k==='M'?'Frecce e IC':'Regionali'):lab);
+  });
+  if(anim&&!RM){const id='c5'+Date.now();const cr=svg.append('clipPath').attr('id',id).append('rect').attr('x',0).attr('y',0).attr('height',h).attr('width',m.l);g.attr('clip-path',`url(#${id})`);
+    cr.transition().duration(1400).ease(d3.easeCubicInOut).attr('width',w).on('end',()=>g.attr('clip-path',null))}
+  svg.append('text').attr('x',(x(2020)+x(2021))/2).attr('y',y(Math.max(M[2],M[3]))-14).attr('text-anchor','middle').text('Covid').style('font-size','11px').style('fill','var(--ink-2)');
+  [2018,2020,2022,2025].forEach(yy=>svg.append('text').attr('x',x(yy)).attr('y',h-6).attr('text-anchor',yy===2018?'start':yy===2025?'end':'middle').text(narrow&&yy!==2018&&yy!==2025?'’'+String(yy).slice(2):yy).style('font-size','11px').style('fill','var(--ink-2)'));
+  Radar.scheduleHeight();
+}
+Radar.loadCSV('../data/ritardo_medio.csv').then(rows=>{yrs5=rows.map(r=>+r['Anno']);S5={M:{v:rows.map(r=>Radar.num(r['Media e lunga percorrenza']))},R:{v:rows.map(r=>Radar.num(r['Regionali']))}};T.run(document.getElementById('g5c'),'g5',g5)}).catch(e=>Radar.fail('.radar',e));
+})();
+</script>
+</body>
+</html>

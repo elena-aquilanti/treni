@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trova la tua regione – Radar QN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,700&display=swap">
+<link rel="stylesheet" href="../assets/radar.css">
+<link rel="stylesheet" href="../assets/treni.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="../assets/radar.js"></script>
+<script src="../assets/treni.js"></script>
+</head>
+<body>
+<main class="radar">
+  <header>
+    <h1 class="r-title">Treni, solo un passeggero su due è soddisfatto della puntualità: è il minimo dal 2017</h1>
+    <p class="r-sub">Utenti del treno soddisfatti della puntualità, regione per regione, %. Scegli la tua regione dal menu o sulla carta, e l'anno</p>
+  </header>
+  <div class="mapone">
+    <div class="panel" id="pReg">
+      <div class="g1grid">
+        <div class="kpi side"><select id="s1" aria-label="Scegli la regione"></select><b class="kn" id="k1n" aria-live="polite"></b><div class="kl" id="k1l"></div><div class="kr" id="k1r"></div></div>
+        <div class="mapcol"><div id="m1" class="map"></div><div class="scale" id="m1s"></div></div>
+        <div class="rankbox"><div class="yrline"><button class="pill" id="play" aria-pressed="false">▶ Play</button><input type="range" id="yr" min="2017" max="2025" step="1" value="2025" aria-label="Anno"><b id="yrv">2025</b></div>
+          <div class="rk" id="rk1"></div></div>
+      </div></div>
+  </div>
+  <p class="r-note">Indagine ISTAT su chi ha preso il treno nell'anno: è un campione, le piccole differenze tra regioni contano poco.</p>
+  <footer class="r-foot">
+    <span>Fonte: ISTAT, Aspetti della vita quotidiana 2017-2025 (Annuario statistico italiano, IstatData). Confini: openpolis su dati ISTAT</span>
+    <span>Elaborazione Radar – QN</span>
+  </footer>
+</main>
+<script>
+(function(){
+const f1=T.f1, W=T.W, showTip=T.showTip, hideTip=T.hideTip, AN=T.AN, RM=T.RM;
+let D,IT,regs,MIT,GEO;
+const BR=[50,55,60,65];
+const seqVars=['--blue-5','--blue-4','--blue-3','--blue-2','--blue-1'];
+function cls(v){let i=0;while(i<BR.length&&v>=BR[i])i++;return i}
+function scaleKey(el,labels,vars){el.innerHTML=labels.map((l,i)=>`<span><i style="background:var(${vars[i]})"></i> ${l}</span>`).join('')}
+function drawMap(el,valOf,onPick,sel){
+  el.innerHTML='';const w=W(el),h=Math.round(w*1.15);
+  const proj=d3.geoMercator().fitSize([w,h],GEO), path=d3.geoPath(proj);
+  const svg=d3.select(el).append('svg').attr('width',w).attr('height',h).attr('role','img');
+  svg.selectAll('path').data(GEO.features).join('path').attr('d',path)
+    .attr('class',d=>d.properties.n===sel?'on':null)
+    .style('fill',d=>{const v=valOf(d.properties.n);return v==null?'var(--grey-5)':`var(${seqVars[cls(v)]})`})
+    .on('pointermove',(ev,d)=>{const v=valOf(d.properties.n);showTip(ev,`<b>${d.properties.n}</b>${v==null?'n.d.':f1(v)+'%'}`)})
+    .on('pointerleave',hideTip).on('click',(ev,d)=>onPick(d.properties.n));
+  if(AN.g1&&!RM){const cx=d=>path.centroid(d)[1];svg.selectAll('path').style('opacity',0).transition().delay(d=>cx(d)/h*700).duration(450).style('opacity',1)}
+  return {svg,proj};
+}
+/* ---------- G1B ---------- */
+let reg1='', y1=2025, y2=2024, timer=null, timer2=null;
+function countTo(el,v,fmt){const prev=+el.dataset.v||0;el.dataset.v=v;if(RM||!el.dataset.init){el.dataset.init=1;el.textContent=fmt(v);return}
+  d3.select(el).transition().duration(600).tween('t',()=>t=>{el.textContent=fmt(prev+(v-prev)*t)})}
+/* classifica animata: items [{k,l,v,c}] ordinati dal migliore; righe riusate per far scorrere le posizioni */
+function rankList(el,items,sel,onPick,o){
+  /* due colonnine: le 3 migliori (blu) e le 3 peggiori (rosso) dell'anno scelto */
+  const v=items.filter(d=>d.v!=null).sort((a,b)=>b.v-a.v), n=v.length;
+  const li=(d,i,c)=>`<li class="${d.k===sel?'on':''}" data-k="${d.k}"><span class="n">${i+1}</span><span class="l">${d.l}</span><b style="color:var(${c})">${f1(d.v)}</b></li>`;
+  el.innerHTML=`<div class="tb"><div><h4>${o.best}</h4><ol>${v.slice(0,3).map((d,i)=>li(d,i,'--blue')).join('')}</ol></div><div><h4>${o.worst}</h4><ol>${v.slice(-3).reverse().map((d,i)=>li(d,n-1-i,'--red')).join('')}</ol></div></div>`;
+  el.querySelectorAll('li').forEach(x=>x.onclick=()=>onPick(x.dataset.k));
+  if(!T.RM)el.querySelectorAll('li').forEach((x,i)=>{x.style.animation=`fade .45s ${i%3*0.06}s both`});
+}
+function g1b(){
+  document.getElementById('yrv').textContent=y1;document.getElementById('yr').value=y1;
+  const s1=document.getElementById('s1');if(!s1.options.length){s1.add(new Option('Italia (tutte le regioni)',''));regs.slice().sort((a,b)=>a.localeCompare(b,'it')).forEach(r=>s1.add(new Option(r,r)));s1.onchange=()=>{reg1=s1.value;g1b()}}
+  s1.value=reg1;
+  drawMap(document.getElementById('m1'),n=>D[n]?.[y1],n=>{if(D[n]){reg1=reg1===n?'':n;g1b()}},reg1);
+  scaleKey(document.getElementById('m1s'),['meno di 50','50-55','55-60','60-65','65 e oltre'],seqVars);
+  const S1=reg1?D[reg1]:IT,v=S1[y1],rk=regs.slice().sort((a,b)=>D[b][y1]-D[a][y1]).indexOf(reg1)+1,dv=S1[y1]-S1[2017];
+  const kn=document.getElementById('k1n');kn.style.color='var(--blue)';countTo(kn,v,x=>f1(x)+'%');
+  document.getElementById('k1l').innerHTML=`degli utenti del treno in <b>${reg1||'Italia'}</b> è soddisfatto della puntualità nel ${y1}`+(reg1?'':'. Scegli una regione dal menu o sulla carta');
+  document.getElementById('k1r').innerHTML=reg1?`<span>${rk}ª su ${regs.length}</span>`:'';
+  rankList(document.getElementById('rk1'),regs.map(r=>({k:r,l:r,v:D[r][y1],c:seqVars[cls(D[r][y1])]})),reg1,n=>{reg1=n;g1b()},{best:'Più soddisfatte',worst:'Meno soddisfatte'});
+  AN.g1=false;
+}
+
+const PT={Milano:[9.19,45.46],Bologna:[11.34,44.49],Rimini:[12.57,44.06],Ancona:[13.52,43.62],Pescara:[14.21,42.46],Foggia:[15.55,41.46],Bari:[16.87,41.12],Lecce:[18.17,40.35],Foligno:[12.7,42.95],Firenze:[11.25,43.77],Roma:[12.5,41.9],Genova:[8.93,44.41],Napoli:[14.27,40.85],Benevento:[14.78,41.13],Salerno:[14.77,40.68],Paola:[16.04,39.36],Lamezia:[16.31,38.97],Reggio:[15.65,38.11],Messina:[15.55,38.19],Cefalu:[14.02,38.04],Palermo:[13.36,38.12],Grosseto:[11.11,42.76],Livorno:[10.31,43.55],Pisa:[10.4,43.72],LaSpezia:[9.82,44.1]};
+const ROUTES=[
+ ['Adriatica',['Milano','Bologna','Rimini','Ancona','Pescara','Foggia','Bari','Lecce'],2],
+ ['Ancona-Roma',['Ancona','Foligno','Roma'],0],
+ ['Dorsale',['Milano','Bologna','Firenze','Roma'],0],
+ ['Milano-Liguria',['Milano','Genova'],0],
+ ['Napoli-Puglia',['Napoli','Benevento','Foggia','Bari'],0],
+ ['RM-Puglia',['Roma','Benevento','Foggia','Bari'],-2],
+ ['Sicilia-Milano',['Milano','Bologna','Firenze','Roma','Napoli','Salerno','Paola','Lamezia','Reggio','Messina','Cefalu','Palermo'],-2],
+ ['Sicilia-Roma',['Roma','Napoli','Salerno','Paola','Lamezia','Reggio','Messina','Cefalu','Palermo'],0],
+ ['Tirrenica Nord',['Roma','Grosseto','Livorno','Pisa','LaSpezia','Genova'],0],
+ ['Tirrenica Sud',['Roma','Napoli','Salerno','Paola','Lamezia','Reggio'],2]];
+const RCL=[[90,'--red-2','sotto 90'],[92,'--red-3','90-92'],[94,'--blue-3','92-94'],[101,'--blue-1','94 e oltre']];
+const rcol=v=>RCL.find(c=>v<c[0])[1];
+let route1='Sicilia-Milano';
+function offsetLine(pts,off){if(!off)return pts;return pts.map((p,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];let dx=b[0]-a[0],dy=b[1]-a[1];const L=Math.hypot(dx,dy)||1;return[p[0]-dy/L*off,p[1]+dx/L*off]})}
+function drawRoutes(){
+  document.getElementById('yrv2').textContent=y2;document.getElementById('yr2').value=y2;
+  const s2=document.getElementById('s2');if(!s2.options.length){Object.keys(MIT).sort((a,b)=>a.localeCompare(b,'it')).forEach(k=>s2.add(new Option(k,k)));s2.onchange=()=>{route1=s2.value;drawRoutes()}}
+  s2.value=route1;
+  const el=document.getElementById('m2');el.innerHTML='';const w=W(el),h=Math.round(w*1.15);
+  const proj=d3.geoMercator().fitSize([w,h],GEO), path=d3.geoPath(proj);
+  const svg=d3.select(el).append('svg').attr('width',w).attr('height',h).attr('role','img').attr('aria-label',`Puntualità entro 30 minuti delle 10 direttrici Intercity nel ${y2}`);
+  svg.selectAll('path.r').data(GEO.features).join('path').attr('d',path).style('fill','var(--grey-5)').style('opacity',.55).style('stroke','var(--bg)').style('stroke-width',.6).style('cursor','default');
+  const lw=Math.max(2.4,w/150), line=d3.line().curve(d3.curveLinear);
+  const order=ROUTES.slice().sort((a,b)=>(a[0]===route1)-(b[0]===route1));
+  order.forEach(([n,stops,o])=>{
+    const v=MIT[n][y2], on=n===route1, col=v==null?'--grey-3':rcol(v);
+    const pts=offsetLine(stops.map(c=>proj(PT[c])),o*lw*1.3);
+    const g=svg.append('g').style('cursor','pointer')
+      .on('pointermove',ev=>showTip(ev,`<b>${n}</b>${v==null?'dato non disponibile':f1(v)+'% entro 30 minuti nel '+y2}`)).on('pointerleave',hideTip).on('click',()=>{route1=n;drawRoutes()});
+    g.append('path').attr('d',line(pts)).style('fill','none').style('stroke','transparent').style('stroke-width',lw*4);
+    g.append('path').attr('d',line(pts)).style('fill','none').style('stroke',on?'var(--ink)':'var(--bg)').style('stroke-width',(on?lw*1.5:lw)+(on?3:1.5)).style('stroke-linecap','round').style('stroke-linejoin','round');
+    g.append('path').attr('d',line(pts)).style('fill','none').style('stroke',`var(${col})`).style('stroke-width',on?lw*1.5:lw).style('stroke-dasharray',v==null?'4 4':null).style('stroke-linecap','round').style('stroke-linejoin','round');
+    g.style('opacity',on?1:.85);
+    if(AN.g1&&!RM)g.selectAll('path').each(function(){const L=this.getTotalLength();d3.select(this).style('stroke-dasharray',L+' '+L).style('stroke-dashoffset',L).transition().delay(300+Math.random()*400).duration(1100).ease(d3.easeCubicOut).style('stroke-dashoffset',0).on('end',function(){d3.select(this).style('stroke-dasharray',v==null?'4 4':null)})});
+  });
+  ['Milano','Roma','Napoli','Bari','Palermo','Genova','Ancona'].forEach(c=>{const p=proj(PT[c]),r=c==='Bari'||c==='Ancona';
+    svg.append('circle').attr('cx',p[0]).attr('cy',p[1]).attr('r',2.5).style('fill','var(--bg)').style('stroke','var(--ink)').style('stroke-width',1);
+    svg.append('text').attr('x',p[0]+(r?6:-6)).attr('y',p[1]-5).attr('text-anchor',r?'start':'end').text(c).style('font-size','10.5px').style('font-weight',600).style('fill','var(--ink)').style('paint-order','stroke').style('stroke','var(--bg)').style('stroke-width',3)});
+  document.getElementById('m2s').innerHTML=RCL.map(c=>`<span><i style="background:var(${c[1]})"></i> ${c[2]}</span>`).join('')+'<span><i style="background:repeating-linear-gradient(90deg,var(--grey-3) 0 4px,transparent 4px 8px)"></i> n.d.</span>';
+  const s=MIT[route1], v=s[y2], ks=Object.keys(MIT).filter(k=>MIT[k][y2]!=null), rk=ks.sort((a,b)=>MIT[b][y2]-MIT[a][y2]).indexOf(route1)+1, y0=s[2017]!=null?2017:2023;
+  const kn=document.getElementById('k2n');
+  if(v==null){kn.textContent='n.d.';kn.dataset.init='';kn.style.color='var(--ink-2)';document.getElementById('k2l').innerHTML=`Per la <b>${route1}</b> il ministero pubblica i dati solo dal 2023`;document.getElementById('k2r').innerHTML=''}
+  else{kn.style.color=`var(${rcol(v)})`;countTo(kn,v,x=>f1(x)+'%');
+    document.getElementById('k2l').innerHTML=`dei treni Intercity sulla <b>${route1}</b> arriva entro 30 minuti nel ${y2}`;
+    document.getElementById('k2r').innerHTML=`<span>${rk}ª su ${ks.length}</span>`}
+  rankList(document.getElementById('rk2'),Object.keys(MIT).map(k=>({k,l:k,v:MIT[k][y2],c:MIT[k][y2]==null?'--grey-5':rcol(MIT[k][y2])})),route1,k=>{route1=k;drawRoutes()},{best:'Più puntuali',worst:'Meno puntuali'});
+}
+function player(btn,get,set,lo,hi,draw,tk){const b=document.getElementById(btn);b.onclick=()=>{
+  if(window[tk]){clearInterval(window[tk]);window[tk]=null;b.textContent='▶ Play';return}
+  b.textContent='❚❚ Pausa';set(lo);draw();window[tk]=setInterval(()=>{if(get()>=hi){clearInterval(window[tk]);window[tk]=null;b.textContent='▶ Play';return}set(get()+1);draw()},1100)}}
+
+Promise.all([Radar.loadCSV('../data/istat_regioni.csv'),Radar.loadCSV('../data/intercity_direttrici.csv'),fetch('../data/regioni.geojson').then(r=>r.json())]).then(res=>{
+  D=T.wide(res[0]);IT=D['Italia'];regs=Object.keys(D).filter(r=>r!=='Italia');MIT=T.wide(res[1]);GEO=res[2];
+  GEO.features.forEach(f=>f.properties.n=f.properties.n.split('/')[0]);
+  document.getElementById('yr').addEventListener('input',e=>{y1=+e.target.value;g1b()});
+  player('play',()=>y1,v=>y1=v,2017,2025,g1b,'_t1');
+  T.run(document.querySelector('.mapone'),'g1',g1b);
+}).catch(e=>Radar.fail('.radar',e));
+})();
+</script>
+</body>
+</html>
