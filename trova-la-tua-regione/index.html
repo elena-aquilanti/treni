@@ -77,7 +77,7 @@ function g1b(){
   const kn=document.getElementById('k1n');kn.style.color='var(--blue)';countTo(kn,v,x=>f1(x)+'%');
   document.getElementById('k1l').innerHTML=`degli utenti del treno in <b>${reg1||'Italia'}</b> è soddisfatto della puntualità nel ${y1}`+(reg1?'':'. Scegli una regione dal menu o sulla carta');
   document.getElementById('k1r').innerHTML=reg1?`<span>${rk}ª su ${regs.length}</span>`:'';
-  rankList(document.getElementById('rk1'),regs.map(r=>({k:r,l:r,v:D[r][y1],c:seqVars[cls(D[r][y1])]})),reg1,n=>{reg1=n;g1b()},{best:'Più soddisfatte',worst:'Meno soddisfatte'});
+  rankList(document.getElementById('rk1'),regs.map(r=>({k:r,l:r,v:D[r][y1],c:seqVars[cls(D[r][y1])]})),reg1,n=>{reg1=n;g1b()},{best:'Più soddisfatti',worst:'Meno soddisfatti'});
   AN.g1=false;
 }
 
