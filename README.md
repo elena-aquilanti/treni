@@ -1,6 +1,6 @@
 # Ritardi dei treni – dataviz Radar QN
 
-Sei dataviz interattive per il pezzo Radar sui ritardi ferroviari e sul tempo perso dai pendolari: la mappa della soddisfazione per regione, la puntualità delle linee Intercity, il calcolatore delle ore perse, la puntualità entro 5 minuti per tipo di treno, l'andamento del ritardo medio dal 2018, le cause dei ritardi dell'Alta velocità. Pagine statiche in D3 v7 con gli assets condivisi della skill radar-dataviz, pubblicate su GitHub Pages dalla root di `main`.
+Cinque dataviz interattive per il pezzo Radar sui ritardi ferroviari: la mappa della soddisfazione per regione, la puntualità delle linee Intercity, la puntualità entro 5 minuti per tipo di treno, l'andamento del ritardo medio dal 2018, le cause dei ritardi dell'Alta velocità. Pagine statiche in D3 v7 con gli assets condivisi della skill radar-dataviz, pubblicate su GitHub Pages dalla root di `main`.
 
 Indice con anteprime e snippet da copiare: https://elena-aquilanti.github.io/treni/
 
@@ -10,10 +10,9 @@ Indice con anteprime e snippet da copiare: https://elena-aquilanti.github.io/tre
 |---|---|---|---|---|
 | 1 | Treni, solo un passeggero su due è soddisfatto della puntualità | https://elena-aquilanti.github.io/treni/trova-la-tua-regione/ | data/istat_regioni.csv, data/regioni.geojson | 765px |
 | 2 | Intercity, nove linee su dieci sotto l'obiettivo | https://elena-aquilanti.github.io/treni/linee-intercity/ | data/intercity_direttrici.csv | 775px |
-| 3 | Quante ore perdi in un anno sul treno | https://elena-aquilanti.github.io/treni/ore-perse/ | data/ritardo_medio.csv, data/intercity_direttrici.csv | 472px |
-| 4 | L'Alta velocità è la meno puntuale | https://elena-aquilanti.github.io/treni/puntualita-5-minuti/ | data/rfi_segmenti.csv | 472px |
-| 5 | Frecce e Intercity, il ritardo medio sale; i regionali restano a 2 minuti | https://elena-aquilanti.github.io/treni/dieci-anni/ | data/ritardo_medio.csv | 571px |
-| 6 | Alta velocità, un ritardo su tre dipende dalla rete | https://elena-aquilanti.github.io/treni/cause-ritardi/ | data/cause_ritardi_av.csv | 400px |
+| 3 | L'Alta velocità è la meno puntuale | https://elena-aquilanti.github.io/treni/puntualita-5-minuti/ | data/rfi_segmenti.csv | 472px |
+| 4 | Frecce e Intercity, il ritardo medio sale; i regionali restano a 2 minuti | https://elena-aquilanti.github.io/treni/dieci-anni/ | data/ritardo_medio.csv | 571px |
+| 5 | Alta velocità, un ritardo su tre dipende dalla rete | https://elena-aquilanti.github.io/treni/cause-ritardi/ | data/cause_ritardi_av.csv | 400px |
 
 ## Dati
 
