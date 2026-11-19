@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quante ore perdi in un anno sul treno – Radar QN</title>
+<title>Quanto ritardo accumuli in un anno di treno – Radar QN</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,700&display=swap">
@@ -16,7 +16,7 @@
 <body>
 <main class="radar">
   <header>
-    <h1 class="r-title">Quante ore perdi in un anno sul treno</h1>
+    <h1 class="r-title">Quanto ritardo accumuli in un anno di treno</h1>
     <p class="r-sub">Scegli quante volte prendi il treno a settimana, o la tua linea Intercity. Stima sul ritardo medio in arrivo del 2025</p>
   </header>
   <div class="ctrls" style="gap:16px">
@@ -57,7 +57,7 @@ function g2(){
     grow();Radar.scheduleHeight();return;
   }
   var hrs=function(k){return n2*WEEKS*avg[k]/60};
-  q.innerHTML='Con '+n2+' viaggi a settimana perdi <b class="bl" data-h="'+hrs('R')+'">'+hh(hrs('R'))+' ore</b> all\'anno in regionale, <b class="r" data-h="'+hrs('M')+'">'+hh(hrs('M'))+' ore</b> in Frecce o Intercity';
+  q.innerHTML='Con '+n2+' viaggi a settimana accumuli <b class="bl" data-h="'+hrs('R')+'">'+hh(hrs('R'))+' ore</b> di ritardo all\'anno in regionale, <b class="r" data-h="'+hrs('M')+'">'+hh(hrs('M'))+' ore</b> in Frecce o Intercity';
   c.innerHTML=[['R','Regionale','--blue'],['M','Frecce e Intercity','--red']].map(function(a){var k=a[0];return '<div class="row"><span>'+a[1]+'</span><div><div class="bar on" data-w="'+Math.max(1,hrs(k)/hrs('M')*70)+'" style="width:0%;background:var('+a[2]+')"><span>'+hh(hrs(k))+' ore</span></div></div></div>'}).join('');
   grow();
   if(AN.g2){AN.g2=false;q.querySelectorAll('b').forEach(function(b){var h=+b.dataset.h;d3.select(b).transition().duration(1000).tween('t',function(){return function(t){b.textContent=hh(h*t)+' ore'}})})}
