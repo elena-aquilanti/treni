@@ -57,7 +57,7 @@ function g2(){
     grow();Radar.scheduleHeight();return;
   }
   var hrs=function(k){return n2*WEEKS*avg[k]/60};
-  q.innerHTML='Con '+n2+' viaggi a settimana accumuli <b class="bl" data-h="'+hrs('R')+'">'+hh(hrs('R'))+' ore</b> di ritardo all\'anno in regionale, <b class="r" data-h="'+hrs('M')+'">'+hh(hrs('M'))+' ore</b> in Frecce o Intercity';
+  q.innerHTML='Con '+n2+' viaggi a settimana, in un anno si sommano <b class="bl" data-h="'+hrs('R')+'">'+hh(hrs('R'))+' ore</b> di ritardo in regionale e <b class="r" data-h="'+hrs('M')+'">'+hh(hrs('M'))+' ore</b> in Frecce o Intercity';
   c.innerHTML=[['R','Regionale','--blue'],['M','Frecce e Intercity','--red']].map(function(a){var k=a[0];return '<div class="row"><span>'+a[1]+'</span><div><div class="bar on" data-w="'+Math.max(1,hrs(k)/hrs('M')*70)+'" style="width:0%;background:var('+a[2]+')"><span>'+hh(hrs(k))+' ore</span></div></div></div>'}).join('');
   grow();
   if(AN.g2){AN.g2=false;q.querySelectorAll('b').forEach(function(b){var h=+b.dataset.h;d3.select(b).transition().duration(1000).tween('t',function(){return function(t){b.textContent=hh(h*t)+' ore'}})})}
