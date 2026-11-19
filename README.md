@@ -23,7 +23,7 @@ CSV UTF-8 con separatore `;` e virgola decimale, in `data/`. Ogni valore viene d
 - `intercity_direttrici.csv`: Intercity del contratto di servizio arrivati entro 30 minuti, per direttrice, 2017-2024. Ministero delle infrastrutture e dei trasporti (D119-D128). Napoli-Puglia solo dal 2023.
 - `ritardo_medio.csv`: ritardo medio in arrivo dei treni Trenitalia, regionali e media e lunga percorrenza, 2018-2025, standard B1 (esclusi scioperi ed eventi eccezionali). Trenitalia (D54-D57).
 - `cause_ritardi_av.csv`: cause dei ritardi dell'Alta velocità, 2026 fino al 31 luglio, valori arrotondati. Camera dei deputati, risposta 5-05808 (D12-D14). La quota senza causa indicata è calcolata in pagina (C45).
-- `rfi_segmenti.csv`: treni arrivati entro 5 minuti, misura «Nessuna esclusione», 2024 e 2025. RFI (D24-D34). «Intercity pagati dallo Stato» è il segmento RFI «OSP LP».
+- `rfi_segmenti.csv`: treni arrivati entro 5 minuti, misura "Nessuna esclusione", 2024 e 2025. RFI (D24-D34). "Intercity pagati dallo Stato" è il segmento RFI "OSP LP".
 - `regioni.geojson`: confini regionali semplificati (openpolis, su dati ISTAT).
 
 I capolinea delle direttrici Intercity sono ricostruiti dai nomi delle direttrici.
