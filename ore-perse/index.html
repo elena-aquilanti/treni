@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quante ore perdi in un anno sul treno – Radar QN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,700&display=swap">
+<link rel="stylesheet" href="../assets/radar.css">
+<link rel="stylesheet" href="../assets/treni.css">
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="../assets/radar.js"></script>
+<script src="../assets/treni.js"></script>
+</head>
+<body>
+<main class="radar">
+  <header>
+    <h1 class="r-title">Quante ore perdi in un anno sul treno</h1>
+    <p class="r-sub">Scegli quante volte prendi il treno a settimana, o la tua linea Intercity. Stima sul ritardo medio in arrivo del 2025</p>
+  </header>
+  <div class="ctrls" style="gap:16px">
+    <div class="pills" role="group" aria-label="Tipo di treno">
+      <button class="pill" id="pR" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ico-train"/></svg>Regionali e Frecce</button>
+            <button class="pill" id="pT" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#ico-train"/></svg>La mia linea Intercity</button>
+      <select id="selT" aria-label="Direttrice Intercity" hidden></select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px">Viaggi a settimana
+      <div class="step"><button id="sm" aria-label="Meno viaggi">−</button><span id="sv">10</span><button id="sp" aria-label="Più viaggi">+</button></div></div>
+  </div>
+  <p class="bigq" id="g2q" aria-live="polite"></p>
+  <div class="cmp" id="g2cmp"></div>
+  <p class="r-note">Stima per difetto: viaggi a settimana × 44 settimane × ritardo medio Trenitalia 2025 (<span id="nR"></span> minuti i regionali, <span id="nM"></span> Frecce e Intercity), scioperi esclusi. Per le linee Intercity si contano i viaggi oltre i 30 minuti di ritardo.</p>
+  <footer class="r-foot">
+    <span>Fonte: Trenitalia, Relazione sulla qualità dei servizi 2025; Ministero delle infrastrutture e dei trasporti, Relazione sul contratto di servizio Intercity 2024</span>
+    <span>Elaborazione Radar – QN</span>
+  </footer>
+</main>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="ico-train" viewBox="0 0 24 24"><path d="M6 3h12a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zm0 3v4h5V6H6zm7 0v4h5V6h-5zM7.5 13a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm9 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM7 19h2.5L8 22H5.5L7 19zm7.5 0H17l1.5 3H16l-1.5-3z" fill="currentColor" fill-rule="evenodd"/></symbol>
+  <symbol id="ico-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15zM11 7h2v4.6l3.2 1.9-1 1.7L11 12.7V7z" fill="currentColor" fill-rule="evenodd"/></symbol>
+</svg>
+<script>
+(function(){
+var f1=T.f1,f0=T.f0,AN=T.AN,RM=T.RM,m2='R',n2=10,t2='Sicilia-Milano',avg,MIT,selT=document.getElementById('selT'),WEEKS=44;
+function grow(){var bs=document.querySelectorAll('#g2cmp .bar[data-w]');requestAnimationFrame(function(){requestAnimationFrame(function(){bs.forEach(function(b){b.style.width=b.dataset.w+'%'})})})}
+function hh(v){return f1(v).replace(/,0$/,'')}
+function g2(){
+  document.getElementById('sv').textContent=n2;
+  ['R','T'].forEach(function(k){document.getElementById('p'+k).setAttribute('aria-pressed',m2===k)});selT.hidden=m2!=='T';
+  var q=document.getElementById('g2q'),c=document.getElementById('g2cmp');
+  if(m2==='T'){
+    var late=function(k){return n2*WEEKS*(100-MIT[k][2024])/100},L=late(t2),ks=Object.keys(MIT).sort(function(a,b){return late(b)-late(a)}),mx=late(ks[0]);
+    q.innerHTML='Sulla <b>'+t2+'</b>, con '+n2+' viaggi a settimana, <b class="r">'+f0(L)+' viaggi all\'anno</b> arrivano con più di mezz\'ora di ritardo';
+    c.innerHTML=ks.map(function(k){return '<div class="row" style="cursor:pointer" data-k="'+k+'"><span style="font-weight:'+(k===t2?700:400)+'">'+k+'</span><div><div class="bar'+(k===t2?' on':'')+'" data-w="'+(late(k)/mx*80)+'" style="height:18px;width:0%'+(k===t2?';background:var(--red)':'')+'"><span style="top:0">'+f0(late(k))+'</span></div></div></div>'}).join('');
+    c.querySelectorAll('.row').forEach(function(r){r.onclick=function(){t2=r.dataset.k;selT.value=t2;g2()}});
+    grow();Radar.scheduleHeight();return;
+  }
+  var hrs=function(k){return n2*WEEKS*avg[k]/60};
+  q.innerHTML='Con '+n2+' viaggi a settimana perdi <b class="bl" data-h="'+hrs('R')+'">'+hh(hrs('R'))+' ore</b> all\'anno in regionale, <b class="r" data-h="'+hrs('M')+'">'+hh(hrs('M'))+' ore</b> in Frecce o Intercity';
+  c.innerHTML=[['R','Regionale','--blue'],['M','Frecce e Intercity','--red']].map(function(a){var k=a[0];return '<div class="row"><span>'+a[1]+'</span><div><div class="bar on" data-w="'+Math.max(1,hrs(k)/hrs('M')*70)+'" style="width:0%;background:var('+a[2]+')"><span>'+hh(hrs(k))+' ore</span></div></div></div>'}).join('');
+  grow();
+  if(AN.g2){AN.g2=false;q.querySelectorAll('b').forEach(function(b){var h=+b.dataset.h;d3.select(b).transition().duration(1000).tween('t',function(){return function(t){b.textContent=hh(h*t)+' ore'}})})}
+  Radar.scheduleHeight();
+}
+Promise.all([Radar.loadCSV('../data/ritardo_medio.csv'),Radar.loadCSV('../data/intercity_direttrici.csv')]).then(function(res){
+  var last=res[0][res[0].length-1];avg={R:Radar.num(last['Regionali']),M:Radar.num(last['Media e lunga percorrenza'])};
+  document.getElementById('nR').textContent=f1(avg.R);document.getElementById('nM').textContent=f1(avg.M);
+  MIT=T.wide(res[1]);delete MIT.Totale;Object.keys(MIT).sort(function(a,b){return a.localeCompare(b,'it')}).forEach(function(k){selT.add(new Option(k,k))});selT.value=t2;
+  document.getElementById('pR').onclick=function(){m2='R';g2()};document.getElementById('pT').onclick=function(){m2='T';g2()};
+  selT.onchange=function(){t2=selT.value;g2()};
+  document.getElementById('sm').onclick=function(){n2=Math.max(1,n2-1);g2()};document.getElementById('sp').onclick=function(){n2=Math.min(14,n2+1);g2()};
+  T.run(document.getElementById('g2cmp'),'g2',g2);
+}).catch(function(e){Radar.fail('.radar',e)});
+})();
+</script>
+</body>
+</html>
